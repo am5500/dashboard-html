@@ -1,6 +1,6 @@
-python-telegram-bot==20.7
-pandas==2.2.0
-openpyxl==3.1.2
-httpx==0.26.0
-flask==3.0.1
-plotly==5.18.0
+python-telegram-bot
+pandas
+openpyxl
+httpx
+flask
+plotly
