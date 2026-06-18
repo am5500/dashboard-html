@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "ضع_توكن_البوت_هنا")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8861695419:AAFMWZ2_jpsjwkbJccl-WdEQt0dWgCHf5Lo")
 
 
 def main():
