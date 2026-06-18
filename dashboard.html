@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحليل — {{FILE_NAME}}</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #16181f;
+  --surface2: #1e2029;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.13);
+  --text: #e8e9ed;
+  --text-muted: #7c7f8e;
+  --text-dim: #4a4d5c;
+  --blue: #4f8ef7;
+  --blue-glow: rgba(79,142,247,0.15);
+  --blue-dim: rgba(79,142,247,0.08);
+  --teal: #2dd4a0;
+  --teal-glow: rgba(45,212,160,0.12);
+  --amber: #f5a623;
+  --amber-glow: rgba(245,166,35,0.12);
+  --coral: #f06060;
+  --coral-glow: rgba(240,96,96,0.12);
+  --purple: #a78bfa;
+  --purple-glow: rgba(167,139,250,0.12);
+  --r: 10px;
+  --r-sm: 7px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,17,23,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tb-left { display: flex; align-items: center; gap: 14px; }
+.logo { width: 30px; height: 30px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo svg { width: 16px; height: 16px; fill: white; }
+.tb-title { font-size: 14px; font-weight: 500; }
+.tb-file { font-size: 12px; color: var(--text-muted); background: var(--surface2); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
+.tb-right { display: flex; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-sm); font-size: 13px; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface2); color: var(--text); transition: all .15s; font-family: inherit; }
+.btn:hover { background: var(--surface); border-color: rgba(255,255,255,0.2); }
+.btn-primary { background: var(--blue); border-color: var(--blue); color: white; }
+.btn-primary:hover { background: #3a78e8; }
+.btn svg { width: 14px; height: 14px; }
+
+/* ── Insight banner ── */
+.insight-banner {
+  margin: 24px 28px 0;
+  background: var(--blue-dim);
+  border: 1px solid rgba(79,142,247,0.2);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.insight-icon { width: 32px; height: 32px; background: var(--blue-glow); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.insight-icon svg { width: 16px; height: 16px; stroke: var(--blue); fill: none; }
+.insight-text { font-size: 13.5px; color: #a8c4fb; line-height: 1.65; }
+.insight-label { font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+
+/* ── Filter bar ── */
+.filter-section { margin: 20px 28px 0; }
+.filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filter-label { font-size: 11px; color: var(--text-dim); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; flex-shrink: 0; }
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filter-sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 4px; }
+.pill {
+  padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 400;
+  border: 1px solid var(--border-strong); background: var(--surface2);
+  color: var(--text-muted); cursor: pointer; transition: all .15s; white-space: nowrap;
+  font-family: inherit;
+}
+.pill:hover { border-color: rgba(79,142,247,0.4); color: var(--text); }
+.pill.active { background: var(--blue-dim); border-color: rgba(79,142,247,0.5); color: var(--blue); font-weight: 500; }
+.filter-select {
+  padding: 5px 13px; border-radius: 20px; font-size: 12px;
+  border: 1px solid var(--border-strong); background: var(--surface2);
+  color: var(--text-muted); cursor: pointer; font-family: inherit;
+  appearance: none; padding-left: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237c7f8e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+.active-filter-count {
+  font-size: 11px; background: var(--blue); color: white;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600;
+}
+
+/* ── KPI row ── */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 28px 0; }
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.kpi:hover { border-color: var(--border-strong); }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius: var(--r) var(--r) 0 0; }
+.kpi.c-blue::before { background: var(--blue); }
+.kpi.c-teal::before { background: var(--teal); }
+.kpi.c-amber::before { background: var(--amber); }
+.kpi.c-coral::before { background: var(--coral); }
+.kpi.c-purple::before { background: var(--purple); }
+.kpi-label { font-size: 11px; color: var(--text-dim); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px; }
+.kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -.02em; line-height: 1; margin-bottom: 8px; }
+.kpi.c-blue .kpi-value { color: var(--blue); }
+.kpi.c-teal .kpi-value { color: var(--teal); }
+.kpi.c-amber .kpi-value { color: var(--amber); }
+.kpi.c-coral .kpi-value { color: var(--coral); }
+.kpi.c-purple .kpi-value { color: var(--purple); }
+.kpi-compare { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 500; padding: 2px 7px; border-radius: 20px; }
+.delta.up { background: rgba(45,212,160,0.1); color: var(--teal); }
+.delta.down { background: rgba(240,96,96,0.1); color: var(--coral); }
+.mini-spark { width: 60px; height: 28px; position: absolute; bottom: 16px; left: 20px; opacity: .5; }
+
+/* ── Charts grid ── */
+.charts-section { margin: 20px 28px 0; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--text-muted); letter-spacing: .03em; }
+.charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.chart-card:hover { border-color: var(--border-strong); }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-header { padding: 16px 18px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+.chart-title { font-size: 13px; font-weight: 500; }
+.chart-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.chart-type-badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+.chart-body { padding: 8px 4px 4px; }
+
+/* ── Comparison table ── */
+.comparison-section { margin: 20px 28px 24px; }
+.comp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.comp-table { width: 100%; border-collapse: collapse; }
+.comp-table thead tr { border-bottom: 1px solid var(--border-strong); }
+.comp-table th { padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text-dim); text-align: right; letter-spacing: .04em; text-transform: uppercase; background: var(--surface2); }
+.comp-table td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--surface2); }
+.bar-cell { display: flex; align-items: center; gap: 10px; }
+.bar-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; background: var(--blue); transition: width .6s cubic-bezier(.4,0,.2,1); }
+.bar-fill.teal { background: var(--teal); }
+.bar-fill.amber { background: var(--amber); }
+.rank-badge { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; background: var(--surface2); color: var(--text-muted); }
+.rank-badge.gold { background: rgba(245,166,35,0.15); color: var(--amber); }
+.rank-badge.silver { background: rgba(167,139,250,0.1); color: var(--purple); }
+.rank-badge.bronze { background: rgba(45,212,160,0.1); color: var(--teal); }
+.pct-badge { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 20px; background: var(--blue-dim); color: var(--blue); }
+
+/* ── Footer ── */
+.footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.footer-text { font-size: 12px; color: var(--text-dim); }
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .topbar { padding: 0 16px; }
+  .insight-banner, .filter-section, .kpi-row, .charts-section, .comparison-section { margin-left: 16px; margin-right: 16px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-card.full { grid-column: 1; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .tb-file { display: none; }
+}
+
+/* ── Print ── */
+@media print {
+  .topbar { position: static; }
+  .btn { display: none; }
+  body { background: white; color: #111; }
+  .surface, .kpi, .chart-card, .comp-card { background: white; border: 1px solid #e5e5e5; }
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="tb-left">
+    <div class="logo">
+      <svg viewBox="0 0 16 16"><path d="M2 12 L8 4 L14 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="4" r="1.5"/></svg>
+    </div>
+    <span class="tb-title">داشبورد التحليل</span>
+    <span class="tb-file" id="file-name-badge">{{FILE_NAME}}</span>
+  </div>
+  <div class="tb-right">
+    <button class="btn" onclick="resetFilters()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M1 4h14M5 12h6"/></svg>
+      إعادة ضبط
+    </button>
+    <button class="btn btn-primary" onclick="window.print()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V2h8v4M4 12H2V7h12v5h-2M4 12v2h8v-2"/></svg>
+      تصدير PDF
+    </button>
+  </div>
+</header>
+
+<!-- AI Insight -->
+<div class="insight-banner">
+  <div class="insight-icon">
+    <svg viewBox="0 0 16 16" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1.5"/></svg>
+  </div>
+  <div>
+    <div class="insight-label">ملاحظة الذكاء الاصطناعي</div>
+    <div class="insight-text" id="insight-text">{{INSIGHT}}</div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-section">
+  <div class="filter-row" id="filter-bar">
+    <span class="filter-label">تصفية</span>
+    <div id="dynamic-filters" class="filter-group"></div>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row" id="kpi-row"></div>
+
+<!-- Charts -->
+<div class="charts-section">
+  <div class="section-header">
+    <span class="section-title">الرسوم البيانية</span>
+    <span id="rows-count" style="font-size:12px;color:var(--text-dim)"></span>
+  </div>
+  <div class="charts-grid" id="charts-grid"></div>
+</div>
+
+<!-- Comparison table -->
+<div class="comparison-section">
+  <div class="section-header">
+    <span class="section-title">جدول المقارنة</span>
+  </div>
+  <div class="comp-card">
+    <table class="comp-table" id="comp-table">
+      <thead><tr id="comp-thead"></tr></thead>
+      <tbody id="comp-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer">
+  <span class="footer-text">تم التحليل بواسطة DataBot · <span id="footer-date"></span></span>
+  <span class="footer-text" id="footer-rows"></span>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA INJECTED BY PYTHON
+   ═══════════════════════════════════════════ */
+var RAW_DATA   = {{RAW_DATA}};
+var AI_CONFIG  = {{AI_CONFIG}};
+var FILE_NAME  = "{{FILE_NAME}}";
+
+/* ═══════════════════════════════════════════
+   GLOBALS
+   ═══════════════════════════════════════════ */
+var filteredData = [...RAW_DATA];
+var activeFilters = {};
+var COLORS = ['#4f8ef7','#2dd4a0','#f5a623','#f06060','#a78bfa','#f472b6','#34d399','#fb923c'];
+
+var PLOTLY_LAYOUT = {
+  paper_bgcolor: 'transparent',
+  plot_bgcolor: 'transparent',
+  font: { family: "'IBM Plex Sans Arabic', system-ui", size: 12, color: '#7c7f8e' },
+  margin: { t: 20, r: 16, b: 48, l: 48 },
+  colorway: COLORS,
+  xaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.07)', tickfont: { size: 11 } },
+  yaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.07)', tickfont: { size: 11 } },
+  legend: { bgcolor: 'transparent', font: { size: 11 } },
+  hoverlabel: { bgcolor: '#1e2029', bordercolor: 'rgba(255,255,255,0.1)', font: { color: '#e8e9ed', size: 12 } }
+};
+
+var PLOTLY_CONFIG = {
+  responsive: true,
+  displayModeBar: true,
+  modeBarButtonsToRemove: ['lasso2d','select2d','toImage'],
+  displaylogo: false,
+  modeBarButtonsToAdd: [{
+    name: 'تحميل صورة',
+    icon: Plotly.Icons.camera,
+    click: function(gd) { Plotly.downloadImage(gd, { format: 'png', scale: 2 }); }
+  }]
+};
+
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('footer-date').textContent = new Date().toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+
+  buildFilters();
+  renderAll();
+});
+
+/* ═══════════════════════════════════════════
+   FILTERS — auto-detect categorical columns
+   ═══════════════════════════════════════════ */
+function buildFilters() {
+  var cols = Object.keys(RAW_DATA[0] || {});
+  var catCols = cols.filter(function(col) {
+    var vals = RAW_DATA.map(function(r) { return r[col]; });
+    var unique = [...new Set(vals)].filter(function(v) { return v != null && v !== ''; });
+    var allNum = unique.every(function(v) { return !isNaN(parseFloat(v)) && isFinite(v); });
+    return !allNum && unique.length >= 2 && unique.length <= 20;
+  });
+
+  var container = document.getElementById('dynamic-filters');
+  container.innerHTML = '';
+
+  catCols.slice(0, 3).forEach(function(col, ci) {
+    if (ci > 0) {
+      var sep = document.createElement('span');
+      sep.className = 'filter-sep';
+      container.appendChild(sep);
+    }
+
+    var vals = [...new Set(RAW_DATA.map(function(r) { return r[col]; }).filter(function(v) { return v != null && v !== ''; }))].sort();
+
+    var allPill = document.createElement('button');
+    allPill.className = 'pill active';
+    allPill.textContent = 'الكل';
+    allPill.dataset.col = col;
+    allPill.dataset.val = '__all__';
+    allPill.onclick = function() { setFilter(col, '__all__', this); };
+    container.appendChild(allPill);
+
+    vals.slice(0, 6).forEach(function(val) {
+      var pill = document.createElement('button');
+      pill.className = 'pill';
+      pill.textContent = val;
+      pill.dataset.col = col;
+      pill.dataset.val = val;
+      pill.onclick = function() { setFilter(col, val, this); };
+      container.appendChild(pill);
+    });
+  });
+}
+
+function setFilter(col, val, el) {
+  var siblings = document.querySelectorAll('[data-col="' + col + '"]');
+  siblings.forEach(function(p) { p.classList.remove('active'); });
+  el.classList.add('active');
+
+  if (val === '__all__') {
+    delete activeFilters[col];
+  } else {
+    activeFilters[col] = val;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  filteredData = RAW_DATA.filter(function(row) {
+    return Object.keys(activeFilters).every(function(col) {
+      return String(row[col]) === String(activeFilters[col]);
+    });
+  });
+  renderAll();
+}
+
+function resetFilters() {
+  activeFilters = {};
+  document.querySelectorAll('.pill').forEach(function(p) {
+    p.classList.toggle('active', p.dataset.val === '__all__');
+  });
+  filteredData = [...RAW_DATA];
+  renderAll();
+}
+
+/* ═══════════════════════════════════════════
+   RENDER ALL
+   ═══════════════════════════════════════════ */
+function renderAll() {
+  renderKPIs();
+  renderCharts();
+  renderCompTable();
+
+  var rc = document.getElementById('rows-count');
+  var footer = document.getElementById('footer-rows');
+  if (rc) rc.textContent = filteredData.length.toLocaleString('ar') + ' سجل';
+  if (footer) footer.textContent = 'إجمالي السجلات: ' + RAW_DATA.length.toLocaleString('ar');
+}
+
+/* ═══════════════════════════════════════════
+   KPIs
+   ═══════════════════════════════════════════ */
+var KPI_COLORS = ['c-blue','c-teal','c-amber','c-coral','c-purple'];
+
+function computeVal(col, op) {
+  var vals = filteredData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+  if (!vals.length) return 0;
+  if (op === 'sum')   return vals.reduce(function(a,b){ return a+b; }, 0);
+  if (op === 'avg')   return vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
+  if (op === 'count') return vals.length;
+  if (op === 'max')   return Math.max(...vals);
+  if (op === 'min')   return Math.min(...vals);
+  return vals.reduce(function(a,b){ return a+b; }, 0);
+}
+
+function computeAll(col, op) {
+  var vals = RAW_DATA.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+  if (!vals.length) return 0;
+  if (op === 'sum')   return vals.reduce(function(a,b){ return a+b; }, 0);
+  if (op === 'avg')   return vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
+  if (op === 'count') return vals.length;
+  if (op === 'max')   return Math.max(...vals);
+  if (op === 'min')   return Math.min(...vals);
+  return vals.reduce(function(a,b){ return a+b; }, 0);
+}
+
+function fmtNum(v) {
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(1) + 'M';
+  if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1) + 'K';
+  if (v % 1 !== 0) return v.toFixed(2);
+  return Math.round(v).toLocaleString('ar');
+}
+
+function renderKPIs() {
+  var metrics = AI_CONFIG.metrics || [];
+  var container = document.getElementById('kpi-row');
+  container.innerHTML = '';
+
+  metrics.slice(0, 5).forEach(function(m, i) {
+    var cur  = computeVal(m.column, m.operation);
+    var all  = computeAll(m.column, m.operation);
+    var diff = all ? ((cur - all) / all * 100) : 0;
+    var isFiltered = Object.keys(activeFilters).length > 0;
+
+    var deltaHTML = '';
+    if (isFiltered) {
+      var cls = diff >= 0 ? 'up' : 'down';
+      var arrow = diff >= 0 ? '↑' : '↓';
+      deltaHTML = '<span class="delta ' + cls + '">' + arrow + ' ' + Math.abs(diff).toFixed(1) + '%</span><span>مقارنةً بالكل</span>';
+    } else {
+      deltaHTML = '<span style="color:var(--text-dim);font-size:11px">لا يوجد فلتر مفعّل</span>';
+    }
+
+    var kpi = document.createElement('div');
+    kpi.className = 'kpi ' + KPI_COLORS[i % KPI_COLORS.length];
+    kpi.innerHTML =
+      '<div class="kpi-label">' + m.label + '</div>' +
+      '<div class="kpi-value">' + fmtNum(cur) + '</div>' +
+      '<div class="kpi-compare">' + deltaHTML + '</div>';
+    container.appendChild(kpi);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   CHARTS
+   ═══════════════════════════════════════════ */
+function renderCharts() {
+  var charts = AI_CONFIG.charts || [];
+  var grid = document.getElementById('charts-grid');
+  grid.innerHTML = '';
+
+  charts.slice(0, 4).forEach(function(ch, i) {
+    var isLast = (i === charts.length - 1) && (charts.length % 2 !== 0);
+    var card = document.createElement('div');
+    card.className = 'chart-card' + (isLast ? ' full' : '');
+
+    var divId = 'plotly_' + i;
+    card.innerHTML =
+      '<div class="chart-header">' +
+        '<div><div class="chart-title">' + ch.title + '</div>' +
+        '<div class="chart-subtitle">' + (ch.x_column || '') + (ch.y_column ? ' · ' + ch.y_column : '') + '</div></div>' +
+        '<span class="chart-type-badge">' + ch.type + '</span>' +
+      '</div>' +
+      '<div class="chart-body"><div id="' + divId + '" style="height:300px"></div></div>';
+    grid.appendChild(card);
+
+    setTimeout(function() { drawChart(divId, ch, i, isLast); }, 50 * i);
+  });
+}
+
+function groupBy(data, col, valCol, op) {
+  var groups = {};
+  data.forEach(function(row) {
+    var k = row[col];
+    if (k == null) return;
+    if (!groups[k]) groups[k] = [];
+    if (valCol) groups[k].push(parseFloat(row[valCol]) || 0);
+    else groups[k].push(1);
+  });
+  var keys = Object.keys(groups);
+  var vals = keys.map(function(k) {
+    var arr = groups[k];
+    if (op === 'avg') return arr.reduce(function(a,b){return a+b;},0)/arr.length;
+    if (op === 'count') return arr.length;
+    return arr.reduce(function(a,b){return a+b;},0);
+  });
+  return { keys: keys, vals: vals };
+}
+
+function drawChart(divId, ch, idx, fullWidth) {
+  var x_col = ch.x_column;
+  var y_col = ch.y_column;
+  var type  = ch.type;
+  var color = COLORS[idx % COLORS.length];
+  var layout = Object.assign({}, PLOTLY_LAYOUT, { height: 300 });
+  if (fullWidth) layout.margin = { t:20, r:16, b:48, l:56 };
+
+  if (type === 'pie') {
+    var grp = groupBy(filteredData, x_col, y_col, 'sum');
+    Plotly.newPlot(divId, [{
+      type: 'pie', labels: grp.keys, values: grp.vals,
+      hole: 0.38,
+      marker: { colors: COLORS },
+      textfont: { color: '#e8e9ed', size: 11 },
+      hoverlabel: PLOTLY_LAYOUT.hoverlabel
+    }], Object.assign({}, layout, { margin: { t:20, r:20, b:20, l:20 }, showlegend: true }), PLOTLY_CONFIG);
+    return;
+  }
+
+  if (type === 'scatter') {
+    var xs = filteredData.map(function(r) { return parseFloat(r[x_col]); });
+    var ys = filteredData.map(function(r) { return parseFloat(r[y_col]); });
+    Plotly.newPlot(divId, [{
+      type: 'scatter', mode: 'markers', x: xs, y: ys,
+      marker: { color: color, size: 7, opacity: 0.75 },
+      hovertemplate: x_col + ': %{x}<br>' + y_col + ': %{y}<extra></extra>'
+    }], layout, PLOTLY_CONFIG);
+    return;
+  }
+
+  var grp = groupBy(filteredData, x_col, y_col, 'sum');
+
+  if (type === 'line') {
+    Plotly.newPlot(divId, [{
+      type: 'scatter', mode: 'lines+markers',
+      x: grp.keys, y: grp.vals,
+      line: { color: color, width: 2.5, shape: 'spline' },
+      marker: { color: color, size: 6 },
+      fill: 'tozeroy', fillcolor: color.replace(')', ',0.08)').replace('rgb', 'rgba'),
+      hovertemplate: '%{x}: <b>%{y}</b><extra></extra>'
+    }], layout, PLOTLY_CONFIG);
+    return;
+  }
+
+  Plotly.newPlot(divId, [{
+    type: 'bar',
+    x: grp.keys, y: grp.vals,
+    marker: {
+      color: grp.vals.map(function(v, i) { return i === grp.vals.indexOf(Math.max(...grp.vals)) ? color : color + '99'; }),
+      line: { width: 0 }
+    },
+    hovertemplate: '%{x}: <b>%{y:,.0f}</b><extra></extra>'
+  }], Object.assign({}, layout, { bargap: 0.3 }), PLOTLY_CONFIG);
+}
+
+/* ═══════════════════════════════════════════
+   COMPARISON TABLE
+   ═══════════════════════════════════════════ */
+function renderCompTable() {
+  var charts = AI_CONFIG.charts || [];
+  var barChart = charts.find(function(c) { return c.type === 'bar'; });
+  if (!barChart) {
+    barChart = charts[0];
+  }
+  if (!barChart || !barChart.x_column) return;
+
+  var x_col = barChart.x_column;
+  var y_col = barChart.y_column;
+  var grp = groupBy(filteredData, x_col, y_col, 'sum');
+
+  var pairs = grp.keys.map(function(k, i) { return { k: k, v: grp.vals[i] }; });
+  pairs.sort(function(a,b) { return b.v - a.v; });
+  var maxVal = pairs[0] ? pairs[0].v : 1;
+  var total  = pairs.reduce(function(s,p){return s+p.v;},0) || 1;
+
+  var thead = document.getElementById('comp-thead');
+  var tbody = document.getElementById('comp-tbody');
+  thead.innerHTML = '<th style="width:40px">#</th><th>' + x_col + '</th><th>' + (y_col || 'العدد') + '</th><th>الحصة</th><th style="min-width:160px">المقارنة</th>';
+  tbody.innerHTML = '';
+
+  var badgeClasses = ['gold','silver','bronze'];
+  var barColors    = ['','teal','amber'];
+
+  pairs.slice(0, 15).forEach(function(p, i) {
+    var pct = (p.v / total * 100).toFixed(1);
+    var barW = (p.v / maxVal * 100).toFixed(1);
+    var rankClass = i < 3 ? badgeClasses[i] : '';
+    var barClass  = i < 3 ? barColors[i] : '';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><span class="rank-badge ' + rankClass + '">' + (i+1) + '</span></td>' +
+      '<td><strong>' + p.k + '</strong></td>' +
+      '<td>' + fmtNum(p.v) + '</td>' +
+      '<td><span class="pct-badge">' + pct + '%</span></td>' +
+      '<td><div class="bar-cell"><div class="bar-track"><div class="bar-fill ' + barClass + '" style="width:' + barW + '%"></div></div><span style="font-size:11px;color:var(--text-dim);min-width:36px">' + barW + '%</span></div></td>';
+    tbody.appendChild(tr);
+  });
+}
+</script>
+</body>
+</html>
